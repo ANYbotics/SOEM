@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>soem</name>
+  <version>1.6.0</version>
+  <description>The soem package</description>
+  <maintainer email="rdiethelm@anybotics.com">Remo Diethelm</maintainer>
+  <license>Proprietary</license>
+  <author email="rdiethelm@anybotics.com">Remo Diethelm</author>
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

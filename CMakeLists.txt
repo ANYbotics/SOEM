@@ -80,7 +80,7 @@ install(DIRECTORY include/${PROJECT_NAME}/ include_${OS}/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
 )
 
-#add_subdirectory(test/linux/slaveinfo)
+add_subdirectory(test/linux/slaveinfo)
 #add_subdirectory(test/linux/eepromtool)
 #add_subdirectory(test/linux/simple_test)
 #add_subdirectory(test/linux/elmo_twitter)

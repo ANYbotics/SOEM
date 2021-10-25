@@ -1,5 +1,5 @@
 
-set(SOURCES slaveinfo.c)
+set(SOURCES slaveinfo.c ecatcomm_data.c)
 add_executable(slaveinfo ${SOURCES})
 target_link_libraries(slaveinfo soem)
 
@@ -8,7 +8,11 @@ if(WIN32)
 elseif(UNIX)
   target_link_libraries(slaveinfo pthread rt)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "rt-kernel")
-  target_link_libraries(slaveinfo "-Wl,--start-group -l${BSP} -l${ARCH} -lkern -ldev -lsio -lblock -lfs -lusb -llwip -leth -li2c -lrtc -lcan -lnand -lspi -lnor -lpwm -ladc -ltrace -lc -lm -Wl,--end-group") 
+  target_link_libraries(slaveinfo "-Wl,--start-group -l${BSP} -l${ARCH} -lkern -ldev -lsio -lblock -lfs -lusb -llwip -leth -li2c -lrtc -lcan -lnand -lspi -lnor -lpwm -ladc -ltrace -lc -lm -Wl,--end-group")
 endif()
 
-install(TARGETS slaveinfo DESTINATION bin)
+install(TARGETS slaveinfo
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)

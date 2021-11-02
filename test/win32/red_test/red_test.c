@@ -129,7 +129,7 @@ void redtest(char *ifname, char *ifname2)
    }
    else
    {
-      printf("No socket connection on %s\nExcecute as root\n",ifname);
+      printf("No socket connection on %s\nExecute as root\n",ifname);
    }
 }
 

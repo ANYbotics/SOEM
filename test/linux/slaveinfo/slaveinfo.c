@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
+#include <stdlib.h>
 
 #include "soem/soem/ethercat.h"
 
@@ -508,7 +509,7 @@ void si_sdo(int cnt)
     }
 }
 
-void slaveinfo(char *ifname)
+int slaveinfo(char *ifname)
 {
    int cnt, i, j, nSM;
     uint16 ssigen;
@@ -521,10 +522,10 @@ void slaveinfo(char *ifname)
    {
       printf("ec_init on %s succeeded.\n",ifname);
       /* find and auto-config slaves */
-      if ( ecx_config_init(&ecat_context, FALSE) > 0 && ecx_config_map_group(&ecat_context, &IOmap, 0) > 0 )
+      if ( ecx_config_init(&ecat_context, FALSE) > 0)
       {
          ecx_configdc(&ecat_context);
-         while(ecat_context.ecaterror) printf("%s", ecx_elist2string(&ecat_context));
+         while(*ecat_context.ecaterror) printf("%s", ecx_elist2string(&ecat_context));
          printf("%d slaves found and configured.\n", *ecat_context.slavecount);
          expectedWKC = (ecat_context.grouplist[0].outputsWKC * 2) + ecat_context.grouplist[0].inputsWKC;
          printf("Calculated workcounter %d\n", expectedWKC);
@@ -548,11 +549,11 @@ void slaveinfo(char *ifname)
          ecx_readstate(&ecat_context);
          for( cnt = 1 ; cnt <= *ecat_context.slavecount ; cnt++)
          {
-            printf("\nSlave:%d\n Name:%s\n Output size: %dbits\n Input size: %dbits\n State: %d\n Delay: %d[ns]\n Has DC: %d\n",
+            printf("\nSlave: %d\n Name: %s\n Output size: %dbits\n Input size: %dbits\n State: %d\n Delay: %d[ns]\n Has DC: %d\n",
                   cnt, ecat_context.slavelist[cnt].name, ecat_context.slavelist[cnt].Obits, ecat_context.slavelist[cnt].Ibits,
                   ecat_context.slavelist[cnt].state, ecat_context.slavelist[cnt].pdelay, ecat_context.slavelist[cnt].hasdc);
-            if (ecat_context.slavelist[cnt].hasdc) printf(" DCParentport:%d\n", ecat_context.slavelist[cnt].parentport);
-            printf(" Activeports:%d.%d.%d.%d\n", (ecat_context.slavelist[cnt].activeports & 0x01) > 0 ,
+            if (ecat_context.slavelist[cnt].hasdc) printf(" DCParentport: %d\n", ecat_context.slavelist[cnt].parentport);
+            printf(" Activeports: %d.%d.%d.%d\n", (ecat_context.slavelist[cnt].activeports & 0x01) > 0 ,
                                          (ecat_context.slavelist[cnt].activeports & 0x02) > 0 ,
                                          (ecat_context.slavelist[cnt].activeports & 0x04) > 0 ,
                                          (ecat_context.slavelist[cnt].activeports & 0x08) > 0 );
@@ -613,10 +614,12 @@ void slaveinfo(char *ifname)
       printf("End slaveinfo, close socket\n");
       /* stop SOEM, close socket */
       ecx_close(&ecat_context);
+      return EXIT_SUCCESS;
    }
    else
    {
-      printf("No socket connection on %s\nExcecute as root\n",ifname);
+      printf("No socket connection on %s\nExecute as root\n",ifname);
+      return EXIT_FAILURE;
    }
 }
 
@@ -626,6 +629,7 @@ int main(int argc, char *argv[])
 {
    ec_adaptert * adapter = NULL;
    printf("SOEM (Simple Open EtherCAT Master)\nSlaveinfo\n");
+   int return_code = EXIT_FAILURE;
 
    if (argc > 1)
    {
@@ -633,7 +637,7 @@ int main(int argc, char *argv[])
       if ((argc > 2) && (strncmp(argv[2], "-map", sizeof("-map")) == 0)) printMAP = TRUE;
       /* start slaveinfo */
       strcpy(ifbuf, argv[1]);
-      slaveinfo(ifbuf);
+      return_code = slaveinfo(ifbuf);
    }
    else
    {
@@ -649,5 +653,5 @@ int main(int argc, char *argv[])
    }
 
    printf("End program\n");
-   return (0);
+   return return_code;
 }

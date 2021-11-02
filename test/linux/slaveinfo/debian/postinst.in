@@ -1,0 +1,38 @@
+#!/bin/sh
+#
+# see: dh_installdeb(1)
+
+set -e
+
+# summary of how this script can be called:
+#        * <postinst> `configure' <most-recently-configured-version>
+#        * <old-postinst> `abort-upgrade' <new version>
+#        * <conflictor's-postinst> `abort-remove' `in-favour' <package>
+#          <new-version>
+#        * <postinst> `abort-remove'
+#        * <deconfigured's-postinst> `abort-deconfigure' `in-favour'
+#          <failed-install-package> <version> `removing'
+#          <conflicting-package> <version>
+# for details, see http://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
+
+if [ "$1" = configure ]; then
+    # If we have setcap is installed, try setting cap_net_raw+ep,
+    # which allows us to install our binaries without the setuid
+    # bit.
+
+    # Might not be able to run setcap on Ubuntu as tarballs don't properly store those
+    # by default. LP: #1302192
+    if which setcap > /dev/null; then
+        if setcap cap_net_raw+ep @EXECUTABLE_PATH@; then
+            chmod u-s @EXECUTABLE_PATH@
+        else
+            echo "Setcap failed on @EXECUTABLE_PATH@, falling back to setuid" >&2
+            chmod u+s @EXECUTABLE_PATH@
+        fi
+    else
+        chmod u+s @EXECUTABLE_PATH@
+    fi
+fi
+
+exit 0

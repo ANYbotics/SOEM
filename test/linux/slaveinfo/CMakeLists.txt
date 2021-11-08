@@ -1,11 +1,3 @@
-# Generate postinst
-set(EXECUTABLE_PATH ${CMAKE_INSTALL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION}/slaveinfo)
-configure_file(debian/postinst.in ${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst @ONLY)
-
-# Set RPATH, such that the libraries can be found without the need to call `ldconfig`.
-# See https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling for details.
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
 set(SOURCES slaveinfo.c ecatcomm_data.c)
 add_executable(slaveinfo ${SOURCES})
 target_link_libraries(slaveinfo soem)

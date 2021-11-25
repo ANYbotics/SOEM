@@ -23,15 +23,20 @@ if [ "$1" = configure ]; then
 
     # Might not be able to run setcap on Ubuntu as tarballs don't properly store those
     # by default. LP: #1302192
+    EXECUTABLE_PATHS="@EXECUTABLE_PATHS@"
     if which setcap > /dev/null; then
-        if setcap cap_net_raw+ep @EXECUTABLE_PATH@; then
-            chmod u-s @EXECUTABLE_PATH@
-        else
-            echo "Setcap failed on @EXECUTABLE_PATH@, falling back to setuid" >&2
-            chmod u+s @EXECUTABLE_PATH@
-        fi
+        for EXECUTABLE_PATH in ${EXECUTABLE_PATHS}; do
+            if setcap cap_net_raw+ep @EXECUTABLE_PATH@; then
+                chmod u-s ${EXECUTABLE_PATH}
+            else
+                echo "Setcap failed on ${EXECUTABLE_PATH}, falling back to setuid" >&2
+                chmod u+s ${EXECUTABLE_PATH}
+            fi
+        done
     else
-        chmod u+s @EXECUTABLE_PATH@
+        for EXECUTABLE_PATH in ${EXECUTABLE_PATHS}; do
+            chmod u+s ${EXECUTABLE_PATH}
+        done
     fi
 fi
 

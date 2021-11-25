@@ -2,10 +2,6 @@ cmake_minimum_required(VERSION 2.8.4)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 project(soem)
 
-# Generate postinst
-set(EXECUTABLE_PATH ${CMAKE_INSTALL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION}/slaveinfo)
-configure_file(debian/postinst.in debian/postinst @ONLY)
-
 # Set RPATH, such that the libraries can be found without the need to call `ldconfig`.
 # See https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling for details.
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -70,6 +66,10 @@ catkin_package(
     soem
 )
 
+# Generate postinst
+set(EXECUTABLE_PATHS "${CMAKE_INSTALL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION}/slaveinfo ${CMAKE_INSTALL_PREFIX}/${CATKIN_PACKAGE_BIN_DESTINATION}/eepromtool")
+configure_file(debian/postinst.in ${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst @ONLY)
+
 add_library(soem ${SOEM_SOURCES} ${OSAL_SOURCES} ${OSHW_SOURCES} ${OSHW_ARCHSOURCES})
 if(WIN32)
   target_link_libraries(soem wpcap.lib Packet.lib Ws2_32.lib Winmm.lib ${HDF5_LIBRARIES})
@@ -89,7 +89,7 @@ install(DIRECTORY include/${PROJECT_NAME}/ include_${OS}/${PROJECT_NAME}/
 )
 
 add_subdirectory(test/linux/slaveinfo)
-#add_subdirectory(test/linux/eepromtool)
+add_subdirectory(test/linux/eepromtool)
 #add_subdirectory(test/linux/simple_test)
 #add_subdirectory(test/linux/elmo_twitter)
 

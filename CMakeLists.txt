@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 2.8.4)
+cmake_minimum_required(VERSION 3.5.1)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
 project(soem)
 
 # Set RPATH, such that the libraries can be found without the need to call `ldconfig`.
 # See https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling for details.
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 find_package(catkin REQUIRED)
 

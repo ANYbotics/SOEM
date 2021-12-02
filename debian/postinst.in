@@ -26,7 +26,7 @@ if [ "$1" = configure ]; then
     EXECUTABLE_PATHS="@EXECUTABLE_PATHS@"
     if which setcap > /dev/null; then
         for EXECUTABLE_PATH in ${EXECUTABLE_PATHS}; do
-            if setcap cap_net_raw+ep @EXECUTABLE_PATH@; then
+            if setcap cap_net_raw+ep ${EXECUTABLE_PATH}; then
                 chmod u-s ${EXECUTABLE_PATH}
             else
                 echo "Setcap failed on ${EXECUTABLE_PATH}, falling back to setuid" >&2

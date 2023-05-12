@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>soem</name>
-  <version>1.6.12</version>
+  <version>1.6.13</version>
   <description>The soem package</description>
   <maintainer email="rdiethelm@anybotics.com">Remo Diethelm</maintainer>
   <maintainer email="pleemann@anybotics.com">Philipp Leemann</maintainer>

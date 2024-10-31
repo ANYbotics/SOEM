@@ -1,6 +1,9 @@
-cmake_minimum_required(VERSION 3.5.1)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules")
+cmake_minimum_required(VERSION 3.16.3)
 project(soem)
+
+if("$ENV{ROS_VERSION}" STREQUAL "1")
+  # gersemi: off
+
 
 # Set RPATH, such that the libraries can be found without the need to call `ldconfig`.
 # See https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling for details.
@@ -116,3 +119,160 @@ if(CATKIN_ENABLE_TESTING)
   endif()
 endif()
 
+
+
+  # gersemi: on
+else() # ROS version 2
+  ###############
+  ## Configure ##
+  ###############
+
+  # Set RPATH, such that the libraries can be found without the need to call `ldconfig`.
+  # See https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling for details.
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+
+  find_package(ament_cmake REQUIRED)
+  if(DEFINED HOST_INSTALL)
+    set(SOEM_INCLUDE_INSTALL_DIR include/soem/soem)
+  else()
+    #set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/install)
+    set(SOEM_INCLUDE_INSTALL_DIR include)
+  endif()
+
+  #message("CMAKE_SYSTEM_NAME is ${CMAKE_SYSTEM_NAME}")
+
+  if(WIN32)
+    set(OS "win32")
+    link_directories(${CMAKE_SOURCE_DIR}/include_win32/soem/oshw/wpcap/Lib)
+  elseif(UNIX)
+    set(OS "linux")
+  elseif(${CMAKE_SYSTEM_NAME} MATCHES "rt-kernel")
+    set(OS "rtk")
+    #   message("ARCH is ${ARCH}")
+    #   message("BSP is ${BSP}")
+    add_definitions("-Wno-unused-but-set-variable")
+    add_definitions("-Wno-unused-function")
+    add_definitions("-Wno-format")
+  endif()
+
+  #message("OS is ${OS}")
+
+  if(MSVC)
+    set(CMAKE_C_FLAGS_RELEASE "/D _CRT_SECURE_NO_WARNINGS /EHsc")
+    set(CMAKE_C_FLAGS_DEBUG "/D _CRT_SECURE_NO_WARNINGS /EHsc /ZI /Od")
+  endif()
+
+  file(GLOB SOEM_SOURCES include/soem/soem/*.c)
+  file(GLOB OSAL_SOURCES include_${OS}/soem/osal/*.c)
+  file(GLOB OSHW_SOURCES include_${OS}/soem/oshw/*.c)
+
+  if(WIN32)
+    set(SOEM_SOURCES ${SOEM_SOURCES})
+  endif()
+
+  if(${CMAKE_SYSTEM_NAME} MATCHES "rt-kernel")
+    file(GLOB OSHW_ARCHSOURCES include_${OS}/soem/oshw/${ARCH}/*.c)
+  endif()
+
+  # Generate postinst
+  set(EXECUTABLE_PATHS "${CMAKE_INSTALL_PREFIX}/bin/slaveinfo ${CMAKE_INSTALL_PREFIX}/bin/eepromtool")
+  if(DEFINED ENV{DEB_TARGET_ARCH})
+    set(IS_DEBIAN_PACKAGING TRUE)
+  else()
+    set(IS_DEBIAN_PACKAGING FALSE)
+  endif()
+
+  if(${IS_DEBIAN_PACKAGING})
+    configure_file(debian/postinst.in ${CMAKE_CURRENT_SOURCE_DIR}/debian/postinst @ONLY)
+  endif()
+
+
+  ###########
+  ## Build ##
+  ###########
+
+  add_library(
+    soem
+    SHARED
+    ${SOEM_SOURCES}
+    ${OSAL_SOURCES}
+    ${OSHW_SOURCES}
+    ${OSHW_ARCHSOURCES}
+  )
+
+  target_include_directories(
+    soem
+    PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include_${OS}>
+      $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
+  )
+
+  if(WIN32)
+    target_link_libraries(
+      soem
+      wpcap.lib
+      Packet.lib
+      Ws2_32.lib
+      Winmm.lib
+      ${HDF5_LIBRARIES}
+    )
+  elseif(UNIX)
+    target_link_libraries(
+      soem
+      pthread
+      rt
+    )
+  endif()
+
+  #############
+  ## Install ##
+  #############
+
+  install(
+    DIRECTORY
+      include/
+      include_${OS}/
+    DESTINATION include/${PROJECT_NAME}
+    FILES_MATCHING
+    PATTERN
+    "*.h"
+  )
+
+  install(
+    TARGETS
+      soem
+    EXPORT export_${PROJECT_NAME}
+    LIBRARY
+      DESTINATION lib
+    ARCHIVE
+      DESTINATION lib
+    RUNTIME
+      DESTINATION bin
+  )
+
+  ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+
+  add_subdirectory(test/linux/slaveinfo)
+  add_subdirectory(test/linux/eepromtool)
+  #add_subdirectory(test/linux/simple_test)
+  #add_subdirectory(test/linux/elmo_twitter)
+
+  ##########
+  ## Test ##
+  ##########
+  if(BUILD_TESTING)
+    find_package(ament_cmake_gtest REQUIRED)
+    ament_add_gtest(test_${PROJECT_NAME} test/EmptyTests.cpp WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
+    target_include_directories(test_${PROJECT_NAME} PRIVATE include)
+    target_link_libraries(test_${PROJECT_NAME} ${PROJECT_NAME})
+
+    find_package(cmake_code_coverage QUIET)
+    if(cmake_code_coverage_FOUND)
+      add_gtest_coverage()
+    endif(cmake_code_coverage_FOUND)
+  endif()
+
+  ament_package()
+endif()
